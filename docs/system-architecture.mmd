@@ -1,0 +1,80 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#326ce5', 'primaryTextColor': '#fff'}}}%%
+
+graph LR
+    subgraph CLIENT["🖥️ Client Layer"]
+        direction TB
+        BROWSER["🌐 Web Browser"]
+        REACT["⚛️ React 19 SPA"]
+        BROWSER --> REACT
+    end
+
+    subgraph GATEWAY["🔀 API Gateway"]
+        FASTAPI["🐍 FastAPI<br/>:8000"]
+        CORS["CORS<br/>Middleware"]
+        FASTAPI --> CORS
+    end
+
+    subgraph CONFIG_MGMT["⚙️ Configuration Management"]
+        direction TB
+        VAULT_SVC["🔐 Vault<br/>Client"]
+        CONSUL_SVC["🗂️ Consul<br/>Client"]
+        NACOS_SVC["📦 Nacos<br/>Client"]
+    end
+
+    subgraph INFRA["☸️ Infrastructure"]
+        direction TB
+        K8S_SVC["☸️ K8s<br/>Client"]
+        ARGOCD_SVC["🔄 ArgoCD<br/>Client"]
+        GIT_SVC["📁 GitOps<br/>Service"]
+        MONITOR_SVC["📊 Monitor<br/>Service"]
+    end
+
+    subgraph STORAGE["💾 Storage Layer"]
+        direction TB
+        SUPABASE_DB[("🗄️ Supabase<br/>PostgreSQL")]
+        IN_MEMORY["🧠 In-Memory<br/>Store"]
+    end
+
+    subgraph EXTERNAL["🌍 External Services"]
+        direction TB
+        VAULT_EXT[("🔐 Vault")]
+        CONSUL_EXT[("🗂️ Consul")]
+        NACOS_EXT[("📦 Nacos")]
+        ARGOCD_EXT[("🔄 ArgoCD")]
+        K8S_EXT[("☸️ K8s Clusters")]
+        GRAFANA_EXT[("📊 Grafana")]
+        GIT_EXT[("📁 Git Repo")]
+    end
+
+    REACT <-->|"HTTP/JSON"| FASTAPI
+    FASTAPI <--> VAULT_SVC
+    FASTAPI <--> CONSUL_SVC
+    FASTAPI <--> NACOS_SVC
+    FASTAPI <--> K8S_SVC
+    FASTAPI <--> ARGOCD_SVC
+    FASTAPI <--> GIT_SVC
+    FASTAPI <--> MONITOR_SVC
+    FASTAPI <--> SUPABASE_DB
+    FASTAPI <--> IN_MEMORY
+
+    VAULT_SVC <-->|"TCP 8200"| VAULT_EXT
+    CONSUL_SVC <-->|"TCP 8500"| CONSUL_EXT
+    NACOS_SVC <-->|"TCP 8848"| NACOS_EXT
+    ARGOCD_SVC <-->|"HTTPS 443"| ARGOCD_EXT
+    K8S_SVC <-->|"HTTPS 6443"| K8S_EXT
+    MONITOR_SVC <-->|"HTTPS 3000"| GRAFANA_EXT
+    GIT_SVC <-->|"SSH/HTTPS"| GIT_EXT
+
+    classDef client fill:#dbeafe,stroke:#326ce5,color:#1e3a5f
+    classDef gateway fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef config fill:#d1fae5,stroke:#10b981,color:#064e3b
+    classDef infra fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef storage fill:#e0e7ff,stroke:#6366f1,color:#312e81
+    classDef external fill:#f3f4f6,stroke:#6b7280,color:#1f2937
+
+    class BROWSER,REACT client
+    class FASTAPI,CORS gateway
+    class VAULT_SVC,CONSUL_SVC,NACOS_SVC config
+    class K8S_SVC,ARGOCD_SVC,GIT_SVC,MONITOR_SVC infra
+    class SUPABASE_DB,IN_MEMORY storage
+    class VAULT_EXT,CONSUL_EXT,NACOS_EXT,ARGOCD_EXT,K8S_EXT,GRAFANA_EXT,GIT_EXT external

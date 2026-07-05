@@ -1,0 +1,66 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#326ce5', 'primaryTextColor': '#fff'}}}%%
+
+flowchart LR
+    subgraph INPUT["📥 Input Layer"]
+        direction TB
+        SETTINGS["⚙️ Settings<br/>Form Input"]
+        CLUSTER_SEL["☸️ Cluster<br/>Selector"]
+        NS_SEL["📁 Namespace<br/>Selector"]
+        SECRET_INPUT["🔐 Secret<br/>Data"]
+    end
+
+    subgraph PROCESS["🔄 Processing Layer"]
+        direction TB
+        VALIDATE["✅ Validate<br/>Input"]
+        MASK["🔒 Mask<br/>Tokens"]
+        BLACKLIST_CHECK["🚫 Blacklist<br/>Check"]
+        MERGE["🔀 Merge<br/>Configs"]
+    end
+
+    subgraph STORAGE_LAYER["💾 Storage Layer"]
+        direction TB
+        SETTINGS_STORE["📝 Settings<br/>Store"]
+        SECRET_STORE["🔐 Secret<br/>Store"]
+        AUDIT_LOG["📋 Audit<br/>Log"]
+    end
+
+    subgraph OUTPUT["📤 Output Layer"]
+        direction TB
+        K8S_DEPLOY["☸️ K8s<br/>Deploy"]
+        VAULT_SYNC["🔐 Vault<br/>Sync"]
+        CONSUL_SYNC["🗂️ Consul<br/>Sync"]
+        NACOS_SYNC["📦 Nacos<br/>Sync"]
+        ARGO_SYNC["🔄 ArgoCD<br/>Sync"]
+    end
+
+    SETTINGS --> VALIDATE
+    CLUSTER_SEL --> VALIDATE
+    NS_SEL --> VALIDATE
+    SECRET_INPUT --> VALIDATE
+
+    VALIDATE --> MASK
+    VALIDATE --> BLACKLIST_CHECK
+
+    MASK --> SETTINGS_STORE
+    MASK --> SECRET_STORE
+    BLACKLIST_CHECK --> MERGE
+    SETTINGS_STORE --> MERGE
+    SECRET_STORE --> MERGE
+
+    MERGE --> K8S_DEPLOY
+    MERGE --> VAULT_SYNC
+    MERGE --> CONSUL_SYNC
+    MERGE --> NACOS_SYNC
+    MERGE --> ARGO_SYNC
+
+    MERGE --> AUDIT_LOG
+
+    classDef input fill:#dbeafe,stroke:#326ce5,color:#1e3a5f
+    classDef process fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef storage fill:#d1fae5,stroke:#10b981,color:#064e3b
+    classDef output fill:#fce7f3,stroke:#ec4899,color:#831843
+
+    class SETTINGS,CLUSTER_SEL,NS_SEL,SECRET_INPUT input
+    class VALIDATE,MASK,BLACKLIST_CHECK,MERGE process
+    class SETTINGS_STORE,SECRET_STORE,AUDIT_LOG storage
+    class K8S_DEPLOY,VAULT_SYNC,CONSUL_SYNC,NACOS_SYNC,ARGO_SYNC output

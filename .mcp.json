@@ -8,6 +8,19 @@
         "--project-ref",
         "tfnvemzppsupbbqputva"
       ]
+    },
+    "argocd": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "argocd-mcp@latest"
+      ],
+      "env": {
+        "ARGOCD_SERVER": "https://argocd.example.com",
+        "ARGOCD_AUTH_TOKEN": "your-argocd-auth-token",
+        "ARGOCD_NAMESPACE": "argocd",
+        "ARGOCD_INSECURE": "false"
+      }
     }
   }
 }

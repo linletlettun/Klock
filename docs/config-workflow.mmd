@@ -1,0 +1,76 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#326ce5', 'primaryTextColor': '#fff'}}}%%
+
+sequenceDiagram
+    actor User as 👤 User
+    participant UI as ⚛️ Settings UI
+    participant API as 🐍 FastAPI
+    participant Vault as 🔐 Vault
+    participant Consul as 🗂️ Consul
+    participant Nacos as 📦 Nacos
+
+    rect rgb(219, 234, 254)
+        Note over User,Nacos: Connection Setup Flow
+        User->>UI: Configure Vault / Consul / Nacos
+        UI->>API: PUT /api/settings
+        API->>API: Save to Store (tokens masked)
+        API-->>UI: Settings saved ✓
+    end
+
+    rect rgb(209, 250, 229)
+        Note over User,Nacos: Test Connection Flow
+        User->>UI: Click "Test Connection"
+        alt Vault
+            UI->>API: POST /api/config/vault/test
+            API->>Vault: GET /v1/sys/health
+            Vault-->>API: {version, sealed}
+            API-->>UI: ✓ Connected (v1.15.0)
+        else Consul
+            UI->>API: POST /api/config/consul/test
+            API->>Consul: GET /v1/status/leader
+            Consul-->>API: {leader, datacenter}
+            API-->>UI: ✓ Connected (dc1)
+        else Nacos
+            UI->>API: POST /api/nacos/test
+            API->>Nacos: GET /nacos/v1/ns/service/list
+            Nacos-->>API: 200 OK
+            API-->>UI: ✓ Connected
+        end
+    end
+
+    rect rgb(254, 243, 199)
+        Note over User,Nacos: Secret / Config Browse Flow
+        User->>UI: Enter path & click "List"
+        alt Vault Secrets
+            UI->>API: POST /api/config/vault/list
+            API->>Vault: GET /v1/{mount}/metadata/{path}?list=true
+            Vault-->>API: {keys: ["db-pass", "api-key/"]}
+            API-->>UI: Display keys
+            User->>UI: Click key
+            UI->>API: POST /api/config/vault/get
+            API->>Vault: GET /v1/{mount}/data/{path}
+            Vault-->>API: {data: {username: "***"}}
+            API-->>UI: Show secret values
+        else Consul KV
+            UI->>API: POST /api/config/consul/list
+            API->>Consul: GET /v1/kv/{prefix}?keys=true
+            Consul-->>API: ["app/config", "db/url"]
+            API-->>UI: Display keys
+            User->>UI: Click key
+            UI->>API: POST /api/config/consul/get
+            API->>Consul: GET /v1/kv/{full_key}
+            Consul-->>API: base64 decoded value
+            API-->>UI: Show KV value
+        end
+    end
+
+    rect rgb(243, 232, 255)
+        Note over User,Nacos: K8s Config Deployment Flow
+        User->>UI: Select cluster & namespace
+        UI->>API: POST /api/clusters/{id}/configmaps
+        API->>API: Check namespace blacklist
+        API->>Vault: Get secrets (if enabled)
+        Vault-->>API: secret values
+        API->>Consul: Get config (if enabled)
+        Consul-->>API: config values
+        API-->>UI: ConfigMap created ✓
+    end

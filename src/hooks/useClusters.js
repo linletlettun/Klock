@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export function useClusters() {
   const [clusters, setClusters] = useState([]);
@@ -7,19 +7,38 @@ export function useClusters() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     fetchClusters();
 
-    const subscription = supabase
-      .channel('clusters')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'clusters' }, () => {
-        fetchClusters();
-      })
-      .subscribe();
+    let subscription;
+    try {
+      subscription = supabase
+        .channel('clusters')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'clusters' }, () => {
+          fetchClusters();
+        })
+        .subscribe();
+    } catch (err) {
+      console.error('Failed to subscribe to clusters:', err);
+    }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      if (subscription) {
+        try { subscription.unsubscribe(); } catch (e) {}
+      }
+    };
   }, []);
 
   async function fetchClusters() {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -90,13 +109,30 @@ export function useClusters() {
 
   async function testConnection(apiServer, token, caCert) {
     try {
-      const response = await fetch(`${apiServer}/api/v1`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      return { success: response.ok, status: response.status };
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+
+      // Test basic connectivity
+      const response = await fetch(`${apiServer}/api/v1`, { headers });
+      if (!response.ok) {
+        return { success: false, status: response.status };
+      }
+
+      // Fetch K8s version from /version endpoint
+      let k8sVersion = null;
+      try {
+        const versionRes = await fetch(`${apiServer}/version`, { headers });
+        if (versionRes.ok) {
+          const versionData = await versionRes.json();
+          k8sVersion = versionData.gitVersion || versionData.major + '.' + versionData.minor;
+        }
+      } catch {
+        // Version fetch failed, not critical
+      }
+
+      return { success: true, status: response.status, k8sVersion };
     } catch (err) {
       return { success: false, error: err.message };
     }
@@ -113,3 +149,5 @@ export function useClusters() {
     refetch: fetchClusters,
   };
 }
+
+export default useClusters;

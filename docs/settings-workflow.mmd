@@ -1,0 +1,76 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#326ce5', 'primaryTextColor': '#fff'}}}%%
+
+flowchart TB
+    START(("Settings Page<br/>Opened"))
+
+    START --> TABS{"Select Tab"}
+
+    TABS -->|"🔧"| GIT["Git Provider<br/>Config"]
+    TABS -->|"🔄"| ARGO["ArgoCD<br/>Config"]
+    TABS -->|"🔐"| VAULT_TAB["Vault<br/>Config"]
+    TABS -->|"🗂️"| CONSUL_TAB["Consul<br/>Config"]
+    TABS -->|"📦"| NACOS_TAB["Nacos<br/>Config"]
+    TABS -->|"🚫"| BLACKLIST["Namespace<br/>Blacklist"]
+
+    subgraph VAULT_FLOW["🔐 Vault Configuration"]
+        VAULT_TAB --> V_FORM["Fill Form<br/>URL / Token / Namespace"]
+        V_FORM --> V_TOGGLE{"Enable<br/>Vault?"}
+        V_TOGGLE -->|"Yes"| V_TEST["Test Connection"]
+        V_TOGGLE -->|"No"| V_SAVE
+        V_TEST -->|"✓ OK"| V_BROWSE["Browse Secrets"]
+        V_TEST -->|"✗ Fail"| V_FIX["Fix Config"]
+        V_FIX --> V_FORM
+        V_BROWSE --> V_LIST["List Keys"]
+        V_LIST --> V_READ["Read Secret"]
+        V_READ --> V_WRITE["Write / Delete"]
+        V_SAVE(("Save Settings"))
+        V_WRITE --> V_SAVE
+    end
+
+    subgraph CONSUL_FLOW["🗂️ Consul Configuration"]
+        CONSUL_TAB --> C_FORM["Fill Form<br/>URL / Token / DC"]
+        C_FORM --> C_TOGGLE{"Enable<br/>Consul?"}
+        C_TOGGLE -->|"Yes"| C_TEST["Test Connection"]
+        C_TOGGLE -->|"No"| C_SAVE
+        C_TEST -->|"✓ OK"| C_BROWSE["Browse KV Store"]
+        C_TEST -->|"✗ Fail"| C_FIX["Fix Config"]
+        C_FIX --> C_FORM
+        C_BROWSE --> C_LIST["List Keys"]
+        C_LIST --> C_READ["Read Value"]
+        C_READ --> C_WRITE["Write / Delete"]
+        C_SAVE(("Save Settings"))
+        C_WRITE --> C_SAVE
+    end
+
+    subgraph NACOS_FLOW["📦 Nacos Configuration"]
+        NACOS_TAB --> N_FORM["Fill Form<br/>Address / NS / User"]
+        N_FORM --> N_TEST["Test Connection"]
+        N_TEST -->|"✓ OK"| N_SAVE
+        N_TEST -->|"✗ Fail"| N_FIX["Fix Config"]
+        N_FIX --> N_FORM
+        N_SAVE(("Save Settings"))
+    end
+
+    subgraph INTEGRATION["🔗 Integration Flow"]
+        V_SAVE --> DEPLOY{"Deploy<br/>Config?"}
+        C_SAVE --> DEPLOY
+        N_SAVE --> DEPLOY
+        DEPLOY -->|"Yes"| K8S["Apply to<br/>K8s Cluster"]
+        DEPLOY -->|"No"| END(("Done"))
+        K8S --> CHECK{"Namespace<br/>Blacklisted?"}
+        CHECK -->|"Yes"| REJECT["⛔ Rejected"]
+        CHECK -->|"No"| APPLY["✅ Applied"]
+        REJECT --> END
+        APPLY --> END
+    end
+
+    classDef tab fill:#dbeafe,stroke:#326ce5,color:#1e3a5f
+    classDef form fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef action fill:#d1fae5,stroke:#10b981,color:#064e3b
+    classDef decision fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef done fill:#e0e7ff,stroke:#6366f1,color:#312e81
+
+    class START,END done
+    class TABS,V_TOGGLE,C_TOGGLE,DEPLOY,CHECK decision
+    class V_FORM,C_FORM,N_FORM form
+    class V_TEST,C_TEST,N_TEST,V_BROWSE,C_BROWSE,V_LIST,C_LIST,V_READ,C_READ action

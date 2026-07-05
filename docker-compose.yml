@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Frontend (React + Vite)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      - VITE_API_URL=http://localhost:8000
+
+  # Backend (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Nacos Server (for development)
+  # Uncomment if you want to run N locally
+  # nacos:
+  #   image: nacos/nacos-server:v2.3.0
+  #   ports:
+  #     - "8848:8848"
+  #     - "9848:9848"
+  #   environment:
+  #     - MODE=standalone
+  #     - NACOS_AUTH_ENABLE=true
+  #     - NACOS_AUTH_TOKEN=SecretKey012345678901234567890123456789012345678901234567890123456789
+  #     - NACOS_AUTH_IDENTITY_KEY=serverIdentity
+  #     - NACOS_AUTH_IDENTITY_VALUE=security
+  #   volumes:
+  #     - nacos_data:/home/nacos/data
+
+# volumes:
+#   nacos_data:

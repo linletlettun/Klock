@@ -1,0 +1,95 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#326ce5', 'primaryTextColor': '#fff', 'primaryBorderColor': '#235bbf', 'lineColor': '#6b7280', 'secondaryColor': '#f3f4f6', 'tertiaryColor': '#ecfdf5'}}}%%
+
+flowchart TB
+    subgraph USER["👤 User / Browser"]
+        U[("User<br/>Browser")]
+    end
+
+    subgraph FRONTEND["⚛️ Frontend — React 19 + Vite"]
+        direction TB
+        UI["Settings Page<br/>Config Management"]
+        DASH["Dashboard<br/>Cluster Overview"]
+        CLUSTERS["Cluster List<br/>& Detail"]
+        CONFIG["Config Deploy<br/>ConfigMap / Secret"]
+        MONITOR["Monitor<br/>Grafana Dashboards"]
+
+        UI --> |"Save Settings"| API["API Client<br/>fetch()"]
+        DASH --> API
+        CLUSTERS --> API
+        CONFIG --> API
+        MONITOR --> API
+    end
+
+    subgraph BACKEND["🐍 Backend — FastAPI"]
+        direction TB
+        SR["/api/settings<br/>GET / PUT"]
+        CR["/api/cluster<br/>CRUD"]
+        NKR["/api/nacos<br/>Config CRUD"]
+        AR["/api/argocd<br/>App Sync"]
+        GR["/api/gitops<br/>Git Commit"]
+        MGR["/api/monitor<br/>Metrics"]
+        CFG["/api/config<br/>Vault / Consul"]
+
+        API --> SR
+        API --> CR
+        API --> NKR
+        API --> AR
+        API --> GR
+        API --> MGR
+        API --> CFG
+    end
+
+    subgraph SERVICES["🔧 Backend Services"]
+        direction TB
+        VS["VaultClient<br/>KV Secrets"]
+        CS["ConsulClient<br/>KV Store"]
+        NC["NacosClient<br/>Config Center"]
+        AC["ArgoCDClient<br/>GitOps Sync"]
+        GC["GitOps Service<br/>Git Operations"]
+        KC["K8sClient<br/>Cluster Ops"]
+        ST["Store<br/>In-Memory / Supabase"]
+
+        CFG --> VS
+        CFG --> CS
+        NKR --> NC
+        AR --> AC
+        GR --> GC
+        CR --> KC
+        SR --> ST
+        CR --> ST
+    end
+
+    subgraph EXTERNAL["🌐 External Systems"]
+        direction TB
+        VAULT[("🔐 HashiCorp<br/>Vault")]
+        CONSUL[("🗂️ HashiCorp<br/>Consul")]
+        NACOS[("📦 Nacos<br/>Config Center")]
+        ARGOCD[("🔄 ArgoCD<br/>GitOps")]
+        GIT[("📁 Git<br/>Repository")]
+        K8S[("☸️ Kubernetes<br/>Clusters")]
+        GRAFANA[("📊 Grafana<br/>Monitoring")]
+        SUPABASE[("🗄️ Supabase<br/>Auth + DB")]
+    end
+
+    VS <-->|"HTTP API"| VAULT
+    CS <-->|"HTTP API"| CONSUL
+    NC <-->|"Nacos SDK"| NACOS
+    AC <-->|"HTTP API"| ARGOCD
+    GC <-->|"Git Commands"| GIT
+    KC <-->|"K8s API"| K8S
+    MGR <-->|"HTTP API"| GRAFANA
+    ST <-->|"Supabase JS"| SUPABASE
+
+    U -->|"HTTPS"| UI
+
+    classDef frontend fill:#dbeafe,stroke:#326ce5,color:#1e3a5f
+    classDef backend fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef service fill:#d1fae5,stroke:#10b981,color:#064e3b
+    classDef external fill:#f3f4f6,stroke:#6b7280,color:#1f2937
+    classDef user fill:#ede9fe,stroke:#8b5cf6,color:#4c1d95
+
+    class UI,DASH,CLUSTERS,CONFIG,MONITOR,API frontend
+    class SR,CR,NKR,AR,GR,MGR,CFG backend
+    class VS,CS,NC,AC,GC,KC,ST service
+    class VAULT,CONSUL,NACOS,ARGOCD,GIT,K8S,GRAFANA,SUPABASE external
+    class U user

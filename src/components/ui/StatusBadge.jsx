@@ -15,6 +15,37 @@ export default function StatusBadge({ status }) {
       text: 'text-yellow-800',
       dot: 'bg-yellow-500',
     },
+    // ArgoCD-style statuses
+    synced: {
+      bg: 'bg-green-100',
+      text: 'text-green-800',
+      dot: 'bg-green-500',
+    },
+    'out-of-sync': {
+      bg: 'bg-yellow-100',
+      text: 'text-yellow-800',
+      dot: 'bg-yellow-500',
+    },
+    healthy: {
+      bg: 'bg-green-100',
+      text: 'text-green-800',
+      dot: 'bg-green-500',
+    },
+    degraded: {
+      bg: 'bg-red-100',
+      text: 'text-red-800',
+      dot: 'bg-red-500',
+    },
+    progressing: {
+      bg: 'bg-blue-100',
+      text: 'text-blue-800',
+      dot: 'bg-blue-500',
+    },
+    unknown: {
+      bg: 'bg-gray-100',
+      text: 'text-gray-800',
+      dot: 'bg-gray-500',
+    },
   };
 
   const config = statusConfig[status] || statusConfig.pending;
