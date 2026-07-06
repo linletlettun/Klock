@@ -6,8 +6,8 @@ export function TargetSystemRouter({ value, onChange }) {
   const options = [
     {
       id: 'k8s',
-      label: 'Kubernetes Only',
-      description: 'Deploy to K8s clusters only',
+      label: 'Kubernetes',
+      description: 'Deploy to K8s clusters',
       icon: (
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18l6 3-6 3-6-3 6-3z" />
@@ -16,8 +16,8 @@ export function TargetSystemRouter({ value, onChange }) {
     },
     {
       id: 'nacos',
-      label: 'Nacos Only',
-      description: 'Deploy to Nacos config center only',
+      label: 'Nacos',
+      description: 'Deploy to Nacos config center',
       icon: (
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
           <path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v2H8V8zm0 4h8v2H8v-2z" />
@@ -25,12 +25,22 @@ export function TargetSystemRouter({ value, onChange }) {
       ),
     },
     {
-      id: 'both',
-      label: 'Both (Dual Sync)',
-      description: 'Deploy to both K8s and Nacos simultaneously',
+      id: 'vercel',
+      label: 'Vercel',
+      description: 'Deploy env vars to Vercel',
       icon: (
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 4l6 3v6l-6 3-6-3V9l6-3z" />
+          <path d="M12 2L2 22h20L12 2z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'aws',
+      label: 'AWS',
+      description: 'Deploy to AWS SSM / EC2',
+      icon: (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18.75 11.35a3.35 3.35 0 00-3.3-3.85H8.55a3.35 3.35 0 00-3.3 3.85v1.3a3.35 3.35 0 003.3 3.85h6.9a3.35 3.35 0 003.3-3.85v-1.3zM12 7.2a.6.6 0 110 1.2.6.6 0 010-1.2zm-4.2 4.7a.6.6 0 110 1.2.6.6 0 010-1.2zm8.4 0a.6.6 0 110 1.2.6.6 0 010-1.2z" />
         </svg>
       ),
     },
@@ -41,7 +51,7 @@ export function TargetSystemRouter({ value, onChange }) {
       <label className="block text-sm font-medium text-gray-700 mb-2">
         Target System
       </label>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {options.map((option) => (
           <button
             key={option.id}

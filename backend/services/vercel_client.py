@@ -28,6 +28,7 @@ class VercelClient:
                 resp = await client.get(
                     f"https://api.vercel.com/v2/user",
                     headers=self._headers(),
+                    params=self._params(),
                 )
                 if resp.status_code == 200:
                     data = resp.json()

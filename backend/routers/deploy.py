@@ -516,7 +516,8 @@ async def test_vercel_connection():
     vercel_token = settings.get("vercel_token", "")
     if not vercel_token:
         return {"ok": False, "error": "Vercel token not configured"}
-    client = VercelClient(token=vercel_token)
+    team_id = settings.get("vercel_team_id", "")
+    client = VercelClient(token=vercel_token, team_id=team_id if team_id else None)
     return await client.test_connection()
 
 

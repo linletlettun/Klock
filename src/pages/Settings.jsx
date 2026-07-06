@@ -607,7 +607,7 @@ function VercelTab({ settings, onChange }) {
         <Input value={settings?.vercel_token} onChange={(v) => onChange('vercel_token', v)} placeholder="vercel_xxxxxxxxxxxx" type="password" />
       </Field>
 
-      <Field label="Team ID (optional)" hint="For team accounts — find at vercel.com/teams">
+      <Field label="Team ID (optional)" hint={settings?.vercel_team_id ? `Current: ${settings.vercel_team_id}` : 'For team accounts — find at vercel.com/teams'}>
         <Input value={settings?.vercel_team_id} onChange={(v) => onChange('vercel_team_id', v)} placeholder="team_xxxxxxxxxx" />
       </Field>
 
@@ -621,7 +621,7 @@ function VercelTab({ settings, onChange }) {
       </div>
 
       <div className="border-t border-gray-200 pt-4">
-        <button onClick={testConnection} disabled={testing || !settings?.vercel_token}
+        <button onClick={testConnection} disabled={testing || (!settings?.vercel_token && !settings?.vercel_token_masked)}
           className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
           {testing ? 'Testing...' : 'Test Connection'}
         </button>

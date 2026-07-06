@@ -4,6 +4,7 @@ import NamespaceSelector from '@/components/config/NamespaceSelector';
 import TargetSystemRouter from '@/components/config/TargetSystemRouter';
 import DynamicConfigForm from '@/components/config/DynamicConfigForm';
 import DockerCredsForm from '@/components/config/DockerCredsForm';
+import FileImporter from '@/components/config/FileImporter';
 
 /**
  * Main Config Deployment page
@@ -15,6 +16,7 @@ export function ConfigDeploy() {
   const [selectedCluster, setSelectedCluster] = useState(null);
   const [selectedNamespaces, setSelectedNamespaces] = useState([]);
   const [targetSystem, setTargetSystem] = useState('k8s');
+  const [selectedEnvironment, setSelectedEnvironment] = useState('DEV');
   const [resourceType, setResourceType] = useState('configmap');
   const [isDockerMode, setIsDockerMode] = useState(false);
   const [configName, setConfigName] = useState('');
@@ -25,6 +27,16 @@ export function ConfigDeploy() {
     group: 'DEFAULT_GROUP',
     content: '',
     config_type: 'text',
+  });
+  const [vercelData, setVercelData] = useState({
+    project_name: '',
+    env_vars: {},
+  });
+  const [awsData, setAwsData] = useState({
+    service: 'ssm',
+    region: 'us-east-1',
+    parameter_name: '',
+    env_vars: {},
   });
   const [deployLoading, setDeployLoading] = useState(false);
   const [deployError, setDeployError] = useState(null);
@@ -127,10 +139,13 @@ export function ConfigDeploy() {
   };
 
   const handleReset = () => {
+    setSelectedEnvironment('DEV');
     setConfigName('');
     setConfigData({});
     setDockerData({});
     setNacosData({ data_id: '', group: 'DEFAULT_GROUP', content: '', config_type: 'text' });
+    setVercelData({ project_name: '', env_vars: {} });
+    setAwsData({ service: 'ssm', region: 'us-east-1', parameter_name: '', env_vars: {} });
     setSelectedNamespaces([]);
     setDeployResults(null);
     setDeployError(null);
@@ -155,60 +170,78 @@ export function ConfigDeploy() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Left column - Configuration form */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Cluster Selection */}
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">Target Cluster</h2>
-              {clustersLoading ? (
-                <p className="text-sm text-gray-500">Loading clusters...</p>
-              ) : (
-                <>
-                  <select
-                    value={selectedCluster?.id || ''}
-                    onChange={(e) => {
-                      const cluster = connectedClusters.find((c) => c.id === e.target.value);
-                      setSelectedCluster(cluster);
-                      setSelectedNamespaces([]);
-                    }}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">Select a cluster...</option>
-                    {connectedClusters.map((cluster) => (
-                      <option key={cluster.id} value={cluster.id}>
-                        {cluster.name} ({cluster.k8s_version})
-                      </option>
-                    ))}
-                  </select>
-                  {connectedClusters.length === 0 && (
-                    <p className="mt-2 text-sm text-amber-600">
-                      No connected clusters found. Add a cluster in Settings first.
-                    </p>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Namespace Selection */}
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <NamespaceSelector
-                cluster={selectedCluster}
-                selectedNamespaces={selectedNamespaces}
-                onChange={setSelectedNamespaces}
-              />
-              {selectedNamespaces.length > 0 && (
-                <p className="mt-2 text-sm text-gray-500">
-                  {selectedNamespaces.length} namespace(s) selected
-                </p>
-              )}
-            </div>
-
             {/* Target System */}
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <TargetSystemRouter value={targetSystem} onChange={setTargetSystem} />
             </div>
 
+            {/* Cluster Selection - only for K8s */}
+            {(targetSystem === 'k8s' || targetSystem === 'both') && (
+              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-lg font-semibold text-gray-900">Target Cluster</h2>
+                {clustersLoading ? (
+                  <p className="text-sm text-gray-500">Loading clusters...</p>
+                ) : (
+                  <>
+                    <select
+                      value={selectedCluster?.id || ''}
+                      onChange={(e) => {
+                        const cluster = connectedClusters.find((c) => c.id === e.target.value);
+                        setSelectedCluster(cluster);
+                        setSelectedNamespaces([]);
+                      }}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">Select a cluster...</option>
+                      {connectedClusters.map((cluster) => (
+                        <option key={cluster.id} value={cluster.id}>
+                          {cluster.name} ({cluster.k8s_version})
+                        </option>
+                      ))}
+                    </select>
+                    {connectedClusters.length === 0 && (
+                      <p className="mt-2 text-sm text-amber-600">
+                        No connected clusters found. Add a cluster in Settings first.
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Namespace Selection - only for K8s */}
+            {(targetSystem === 'k8s' || targetSystem === 'both') && (
+              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <NamespaceSelector
+                  cluster={selectedCluster}
+                  selectedNamespaces={selectedNamespaces}
+                  onChange={setSelectedNamespaces}
+                />
+                {selectedNamespaces.length > 0 && (
+                  <p className="mt-2 text-sm text-gray-500">
+                    {selectedNamespaces.length} namespace(s) selected
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Resource Type (for K8s) */}
             {(targetSystem === 'k8s' || targetSystem === 'both') && (
               <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-lg font-semibold text-gray-900">Environment</h2>
+                <div className="mb-6">
+                  <select
+                    value={selectedEnvironment}
+                    onChange={(e) => setSelectedEnvironment(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="DEV">DEV</option>
+                    <option value="STAGING">STAGING</option>
+                    <option value="UAT">UAT</option>
+                    <option value="PROD">PROD</option>
+                    <option value="QA">QA</option>
+                  </select>
+                </div>
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">Resource Type</h2>
                 <div className="flex gap-4">
                   {['configmap', 'secret', 'docker'].map((type) => (
@@ -241,16 +274,22 @@ export function ConfigDeploy() {
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-semibold text-gray-900">Configuration</h2>
               {!isDockerMode && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Resource Name</label>
-                  <input
-                    type="text"
-                    value={configName}
-                    onChange={(e) => setConfigName(e.target.value)}
-                    placeholder="my-config"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
+                <>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Import from File</label>
+                    <FileImporter onImport={(data) => setConfigData((prev) => ({ ...prev, ...data }))} />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Resource Name</label>
+                    <input
+                      type="text"
+                      value={configName}
+                      onChange={(e) => setConfigName(e.target.value)}
+                      placeholder="my-config"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                </>
               )}
               {isDockerMode ? (
                 <DockerCredsForm value={dockerData} onChange={setDockerData} />
