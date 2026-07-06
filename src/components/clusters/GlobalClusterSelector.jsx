@@ -15,7 +15,7 @@ export function GlobalClusterSelector({ selectedCluster, onSelectCluster, onAddC
 
   const fetchClusters = async () => {
     try {
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const API_BASE = import.meta.env.VITE_API_URL || '';
       const res = await fetch(`${API_BASE}/api/cluster`);
       if (res.ok) {
         const data = await res.json();

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import TokenManager from '@/components/apps/TokenManager';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 /**
  * Settings page for managing Git, ArgoCD, Vault, Consul, Nacos, and namespace blacklist.

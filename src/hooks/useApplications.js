@@ -47,7 +47,7 @@ export function useApplications() {
       setError(null);
 
       // Fetch settings to get provider config
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const API_BASE = import.meta.env.VITE_API_URL || '';
       let settings = {};
       try {
         const res = await fetch(`${API_BASE}/api/settings`);
