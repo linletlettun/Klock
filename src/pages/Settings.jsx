@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import TokenManager from '@/components/apps/TokenManager';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
@@ -66,7 +65,6 @@ export default function Settings() {
     { id: 'vault', label: 'Vault', icon: '🔐' },
     { id: 'consul', label: 'Consul', icon: '🗂️' },
     { id: 'nacos', label: 'Nacos', icon: '📦' },
-    { id: 'tokens', label: 'API Tokens', icon: '🔑' },
     { id: 'vercel', label: 'Vercel', icon: '▲' },
     { id: 'blacklist', label: 'Namespace Blacklist', icon: '🚫' },
   ];
@@ -108,12 +106,10 @@ export default function Settings() {
           {activeTab === 'vault' && <VaultTab settings={settings} onChange={handleChange} />}
           {activeTab === 'consul' && <ConsulTab settings={settings} onChange={handleChange} />}
           {activeTab === 'nacos' && <NacosTab settings={settings} onChange={handleChange} />}
-          {activeTab === 'tokens' && <TokenManager />}
           {activeTab === 'vercel' && <VercelTab settings={settings} onChange={handleChange} />}
           {activeTab === 'blacklist' && <BlacklistTab settings={settings} onChange={handleChange} />}
 
-          {/* Save button — not needed for Tokens tab (self-contained) */}
-          {activeTab !== 'tokens' && (
+          {/* Save button */}
           <div className="mt-6 flex items-center gap-4 border-t border-gray-200 pt-4">
             <button
               type="button"
@@ -129,7 +125,6 @@ export default function Settings() {
               </span>
             )}
           </div>
-          )}
         </div>
       </div>
     </div>
