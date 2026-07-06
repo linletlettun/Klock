@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import useClusters from '@/hooks/useClusters';
+import { useApplications } from '@/hooks/useApplications';
 import NamespaceSelector from '@/components/config/NamespaceSelector';
 import TargetSystemRouter from '@/components/config/TargetSystemRouter';
 import DynamicConfigForm from '@/components/config/DynamicConfigForm';
@@ -11,9 +12,11 @@ import FileImporter from '@/components/config/FileImporter';
  */
 export function ConfigDeploy() {
   const { clusters, loading: clustersLoading } = useClusters();
+  const { applications } = useApplications();
 
   // Form state
   const [selectedCluster, setSelectedCluster] = useState(null);
+  const [selectedApp, setSelectedApp] = useState(null);
   const [selectedNamespaces, setSelectedNamespaces] = useState([]);
   const [targetSystem, setTargetSystem] = useState('k8s');
   const [selectedEnvironment, setSelectedEnvironment] = useState('DEV');
@@ -174,6 +177,46 @@ export function ConfigDeploy() {
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <TargetSystemRouter value={targetSystem} onChange={setTargetSystem} />
             </div>
+
+            {/* Target Application */}
+            {applications.length > 0 && (
+              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-2 text-lg font-semibold text-gray-900">Target Application</h2>
+                <p className="mb-3 text-sm text-gray-500">Select the application this configuration is for</p>
+                <select
+                  value={selectedApp?.id || ''}
+                  onChange={(e) => {
+                    const app = applications.find((a) => a.id === e.target.value);
+                    setSelectedApp(app || null);
+                  }}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">Select an application...</option>
+                  {applications.map((app) => (
+                    <option key={app.id} value={app.id}>
+                      {app.name} — {app.repo_url ? app.repo_url.split('/').slice(-2).join('/') : app.path || ''}
+                    </option>
+                  ))}
+                </select>
+                {selectedApp && (
+                  <div className="mt-3 flex items-center gap-3 rounded-lg bg-blue-50 border border-blue-200 p-3">
+                    <div className="w-8 h-8 rounded bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm shrink-0">
+                      {selectedApp.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{selectedApp.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{selectedApp.repo_url || selectedApp.path}</p>
+                    </div>
+                    {selectedApp.url && (
+                      <a href={selectedApp.url} target="_blank" rel="noopener noreferrer"
+                        className="shrink-0 ml-auto text-xs text-blue-600 hover:underline">
+                        🔗 View
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Cluster Selection - only for K8s */}
             {(targetSystem === 'k8s' || targetSystem === 'both') && (
