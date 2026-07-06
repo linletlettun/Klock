@@ -35,10 +35,12 @@ export function ConfigDeploy() {
           .map((d) => ({
             id: `vercel-${d.app_name}`,
             name: d.app_name,
+            app_id: d.id,
             repo_url: d.repo_url,
             url: d.url ? (d.url.startsWith('http') ? d.url : `https://${d.url}`) : null,
             platform: 'vercel',
             branch: d.branch,
+            status: d.status,
           }));
         setVercelApps(apps);
       })
@@ -250,20 +252,35 @@ export function ConfigDeploy() {
                     )}
                   </select>
                   {selectedApp && (
-                    <div className="mt-3 flex items-center gap-3 rounded-lg bg-blue-50 border border-blue-200 p-3">
-                      <div className="w-8 h-8 rounded bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm shrink-0">
-                        {selectedApp.name.charAt(0).toUpperCase()}
+                    <div className="mt-3 rounded-lg bg-blue-50 border border-blue-200 p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm shrink-0">
+                          {selectedApp.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900">{selectedApp.name}</p>
+                          <p className="text-xs text-gray-500 truncate">{selectedApp.repo_url || selectedApp.path}</p>
+                        </div>
+                        {selectedApp.url && (
+                          <a href={selectedApp.url} target="_blank" rel="noopener noreferrer"
+                            className="shrink-0 ml-auto text-xs text-blue-600 hover:underline">
+                            🔗 View
+                          </a>
+                        )}
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{selectedApp.name}</p>
-                        <p className="text-xs text-gray-500 truncate">{selectedApp.repo_url || selectedApp.path}</p>
+                      <div className="mt-2 flex items-center gap-3 text-xs">
+                        {selectedApp.app_id && (
+                          <span className="rounded bg-white border border-gray-200 px-2 py-0.5 text-gray-600">
+                            ID: <code className="font-mono">{selectedApp.app_id}</code>
+                          </span>
+                        )}
+                        <span className="rounded bg-green-100 border border-green-200 px-2 py-0.5 text-green-700 font-medium">
+                          ✅ State: {selectedApp.status === 'promoted' ? 'Production' : 'Ready'}
+                        </span>
+                        <span className="rounded bg-purple-100 border border-purple-200 px-2 py-0.5 text-purple-700">
+                          ▲ Deployed to Vercel
+                        </span>
                       </div>
-                      {selectedApp.url && (
-                        <a href={selectedApp.url} target="_blank" rel="noopener noreferrer"
-                          className="shrink-0 ml-auto text-xs text-blue-600 hover:underline">
-                          🔗 View
-                        </a>
-                      )}
                     </div>
                   )}
                 </>
