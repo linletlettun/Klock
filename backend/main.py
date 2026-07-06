@@ -9,9 +9,12 @@ if _backend_dir not in sys.path:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from config import settings
-from routers import namespaces, configmaps, secrets, nacos, audit, config_mgmt, tokens, deploy
-from routers import clusters, settings as settings_router, argocd, gitops, monitor, alert
+try:
+    from config import settings
+    CORS_ORIGINS = settings.CORS_ORIGINS
+except Exception as e:
+    CORS_ORIGINS = ["*"]
+    print(f"[WARN] config load failed: {e}")
 
 app = FastAPI(
     title="Klock Configuration Management API",
@@ -22,45 +25,48 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers - cluster management
-app.include_router(clusters.router, prefix="/api/cluster", tags=["cluster-management"])
-app.include_router(settings_router.router, prefix="/api/settings", tags=["settings"])
+# Include routers with error handling
+def _include(prefix, module, tags, attr="router"):
+    try:
+        mod = __import__(f"routers.{module}", fromlist=[attr])
+        app.include_router(getattr(mod, attr), prefix=prefix, tags=tags)
+    except Exception as e:
+        print(f"[WARN] Failed to load router {module}: {e}")
 
-# Include routers - K8s resources
-app.include_router(namespaces.router, prefix="/api/clusters", tags=["namespaces"])
-app.include_router(configmaps.router, prefix="/api/clusters", tags=["configmaps"])
-app.include_router(secrets.router, prefix="/api/clusters", tags=["secrets"])
-
-# Include routers - Nacos
-app.include_router(nacos.router, prefix="/api/nacos", tags=["nacos"])
-
-# Include routers - GitOps & ArgoCD
-app.include_router(gitops.router, prefix="/api/gitops", tags=["gitops"])
-app.include_router(argocd.router, prefix="/api/argocd", tags=["argocd"])
-
-# Include routers - Monitoring & Alerts
-app.include_router(monitor.router, prefix="/api/monitor", tags=["monitoring"])
-app.include_router(alert.router, prefix="/api/alert", tags=["alerts"])
-
-# Include routers - Configuration Management (Vault, Consul)
-app.include_router(config_mgmt.router, prefix="/api/config", tags=["config-management"])
-
-# Include routers - Token Management
-app.include_router(tokens.router, prefix="/api/tokens", tags=["token-management"])
-
-# Include routers - Deployment
-app.include_router(deploy.router, prefix="/api/deploy", tags=["deployment"])
-
-# Include routers - Audit
-app.include_router(audit.router, prefix="/api/audit", tags=["audit"])
+_include("/api/cluster", "clusters", ["cluster-management"])
+_include("/api/settings", "settings", ["settings"])
+_include("/api/clusters", "namespaces", ["namespaces"])
+_include("/api/clusters", "configmaps", ["configmaps"])
+_include("/api/clusters", "secrets", ["secrets"])
+_include("/api/nacos", "nacos", ["nacos"])
+_include("/api/gitops", "gitops", ["gitops"])
+_include("/api/argocd", "argocd", ["argocd"])
+_include("/api/monitor", "monitor", ["monitoring"])
+_include("/api/alert", "alert", ["alerts"])
+_include("/api/config", "config_mgmt", ["config-management"])
+_include("/api/tokens", "tokens", ["token-management"])
+_include("/api/deploy", "deploy", ["deployment"])
+_include("/api/audit", "audit", ["audit"])
 
 
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+
+@app.get("/debug")
+async def debug_info():
+    return {
+        "python": sys.version,
+        "cwd": os.getcwd(),
+        "backend_dir": _backend_dir,
+        "sys_path": sys.path[:5],
+        "env_supabase_url": bool(os.environ.get("SUPABASE_URL")),
+        "env_supabase_key": bool(os.environ.get("SUPABASE_KEY")),
+    }
