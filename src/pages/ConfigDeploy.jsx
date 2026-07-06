@@ -6,13 +6,41 @@ import TargetSystemRouter from '@/components/config/TargetSystemRouter';
 import DynamicConfigForm from '@/components/config/DynamicConfigForm';
 import DockerCredsForm from '@/components/config/DockerCredsForm';
 import FileImporter from '@/components/config/FileImporter';
+import api from '@/services/api';
 
 /**
  * Main Config Deployment page
  */
 export function ConfigDeploy() {
   const { clusters, loading: clustersLoading } = useClusters();
-  const { applications } = useApplications();
+  const { applications: gitApps } = useApplications();
+  const [vercelApps, setVercelApps] = useState([]);
+
+  // Fetch Vercel projects as applications
+  useEffect(() => {
+    api.listDeployments()
+      .then((deps) => {
+        const seen = new Set();
+        const apps = deps
+          .filter((d) => {
+            if (seen.has(d.app_name)) return false;
+            seen.add(d.app_name);
+            return true;
+          })
+          .map((d) => ({
+            id: `vercel-${d.app_name}`,
+            name: d.app_name,
+            repo_url: d.repo_url,
+            url: d.url ? (d.url.startsWith('http') ? d.url : `https://${d.url}`) : null,
+            platform: 'vercel',
+            branch: d.branch,
+          }));
+        setVercelApps(apps);
+      })
+      .catch(() => {});
+  }, []);
+
+  const applications = [...gitApps, ...vercelApps];
 
   // Form state
   const [selectedCluster, setSelectedCluster] = useState(null);
@@ -179,44 +207,63 @@ export function ConfigDeploy() {
             </div>
 
             {/* Target Application */}
-            {applications.length > 0 && (
-              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="mb-2 text-lg font-semibold text-gray-900">Target Application</h2>
-                <p className="mb-3 text-sm text-gray-500">Select the application this configuration is for</p>
-                <select
-                  value={selectedApp?.id || ''}
-                  onChange={(e) => {
-                    const app = applications.find((a) => a.id === e.target.value);
-                    setSelectedApp(app || null);
-                  }}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="">Select an application...</option>
-                  {applications.map((app) => (
-                    <option key={app.id} value={app.id}>
-                      {app.name} — {app.repo_url ? app.repo_url.split('/').slice(-2).join('/') : app.path || ''}
-                    </option>
-                  ))}
-                </select>
-                {selectedApp && (
-                  <div className="mt-3 flex items-center gap-3 rounded-lg bg-blue-50 border border-blue-200 p-3">
-                    <div className="w-8 h-8 rounded bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm shrink-0">
-                      {selectedApp.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900">{selectedApp.name}</p>
-                      <p className="text-xs text-gray-500 truncate">{selectedApp.repo_url || selectedApp.path}</p>
-                    </div>
-                    {selectedApp.url && (
-                      <a href={selectedApp.url} target="_blank" rel="noopener noreferrer"
-                        className="shrink-0 ml-auto text-xs text-blue-600 hover:underline">
-                        🔗 View
-                      </a>
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h2 className="mb-2 text-lg font-semibold text-gray-900">Target Application</h2>
+              <p className="mb-3 text-sm text-gray-500">Select the application this configuration is for</p>
+              {applications.length === 0 ? (
+                <div className="rounded-lg bg-gray-50 border border-gray-200 p-4 text-center">
+                  <p className="text-sm text-gray-500">No applications found. Configure Git provider in Settings or deploy an app first.</p>
+                </div>
+              ) : (
+                <>
+                  <select
+                    value={selectedApp?.id || ''}
+                    onChange={(e) => {
+                      const app = applications.find((a) => a.id === e.target.value);
+                      setSelectedApp(app || null);
+                    }}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="">Select an application...</option>
+                    {gitApps.length > 0 && (
+                      <optgroup label="📁 Git Repository">
+                        {gitApps.map((app) => (
+                          <option key={app.id} value={app.id}>
+                            {app.name}
+                          </option>
+                        ))}
+                      </optgroup>
                     )}
-                  </div>
-                )}
-              </div>
-            )}
+                    {vercelApps.length > 0 && (
+                      <optgroup label="▲ Vercel Projects">
+                        {vercelApps.map((app) => (
+                          <option key={app.id} value={app.id}>
+                            {app.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                  </select>
+                  {selectedApp && (
+                    <div className="mt-3 flex items-center gap-3 rounded-lg bg-blue-50 border border-blue-200 p-3">
+                      <div className="w-8 h-8 rounded bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm shrink-0">
+                        {selectedApp.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900">{selectedApp.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{selectedApp.repo_url || selectedApp.path}</p>
+                      </div>
+                      {selectedApp.url && (
+                        <a href={selectedApp.url} target="_blank" rel="noopener noreferrer"
+                          className="shrink-0 ml-auto text-xs text-blue-600 hover:underline">
+                          🔗 View
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
 
             {/* Cluster Selection - only for K8s */}
             {(targetSystem === 'k8s' || targetSystem === 'both') && (
