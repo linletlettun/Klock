@@ -25,17 +25,31 @@ class VercelClient:
         """Verify Vercel token is valid."""
         try:
             async with httpx.AsyncClient(timeout=10) as client:
+                # Try v1/user first (more reliable with all token types)
                 resp = await client.get(
-                    f"https://api.vercel.com/v2/user",
+                    "https://api.vercel.com/v1/user",
                     headers=self._headers(),
-                    params=self._params(),
                 )
                 if resp.status_code == 200:
                     data = resp.json()
+                    user = data.get("user", data)
                     return {
                         "ok": True,
-                        "user": data.get("user", {}).get("name", "Unknown"),
-                        "email": data.get("user", {}).get("email", ""),
+                        "user": user.get("name") or user.get("username", "Unknown"),
+                        "email": user.get("email", ""),
+                    }
+                # Fallback to v2/user
+                resp = await client.get(
+                    "https://api.vercel.com/v2/user",
+                    headers=self._headers(),
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    user = data.get("user", data)
+                    return {
+                        "ok": True,
+                        "user": user.get("name") or user.get("username", "Unknown"),
+                        "email": user.get("email", ""),
                     }
                 return {"ok": False, "error": f"HTTP {resp.status_code}: {resp.text[:200]}"}
         except httpx.ConnectError:

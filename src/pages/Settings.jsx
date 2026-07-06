@@ -587,14 +587,21 @@ function VercelTab({ settings, onChange }) {
     setTesting(true);
     setTestResult(null);
     try {
-      const res = await fetch(`${API_BASE}/api/deploy/vercel/test`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/api/deploy/vercel/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: settings?.vercel_token || undefined,
+          team_id: settings?.vercel_team_id || undefined,
+        }),
+      });
       setTestResult(await res.json());
     } catch {
       setTestResult({ ok: false, error: 'Connection failed' });
     } finally {
       setTesting(false);
     }
-  }, []);
+  }, [settings?.vercel_token, settings?.vercel_team_id]);
 
   return (
     <div className="space-y-6">

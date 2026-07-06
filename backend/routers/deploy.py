@@ -509,14 +509,26 @@ async def delete_deployment(deploy_id: str):
 
 # ── Vercel specific ──
 
+class VercelTestRequest(BaseModel):
+    token: Optional[str] = None
+    team_id: Optional[str] = None
+
+
 @router.post("/vercel/test")
-async def test_vercel_connection():
+async def test_vercel_connection(req: VercelTestRequest = None):
     """Test Vercel API connection."""
-    settings = store.get_settings()
-    vercel_token = settings.get("vercel_token", "")
+    # Use token from request body (form input) or fall back to saved settings
+    if req and req.token:
+        vercel_token = req.token
+        team_id = req.team_id or ""
+    else:
+        settings = store.get_settings()
+        vercel_token = settings.get("vercel_token", "")
+        team_id = settings.get("vercel_team_id", "")
+
     if not vercel_token:
         return {"ok": False, "error": "Vercel token not configured"}
-    team_id = settings.get("vercel_team_id", "")
+
     client = VercelClient(token=vercel_token, team_id=team_id if team_id else None)
     return await client.test_connection()
 
