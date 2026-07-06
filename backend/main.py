@@ -1,3 +1,11 @@
+import sys
+import os
+
+# Ensure backend directory is in Python path (Vercel runs from project root)
+_backend_dir = os.path.dirname(os.path.abspath(__file__))
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
