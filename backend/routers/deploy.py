@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timezone
 import uuid
+import os
 
 from services.store import store
 from services.vercel_client import VercelClient
@@ -138,7 +139,7 @@ async def trigger_deployment(req: DeployRequest):
     # Try Vercel deployment
     if req.platform == "vercel":
         settings = store.get_settings()
-        vercel_token = settings.get("vercel_token", "")
+        vercel_token = settings.get("vercel_token", "") or os.environ.get("VERCEL_TOKEN", "")
         if not vercel_token:
             deployment["status"] = "error"
             deployment["error"] = "Vercel token not configured. Go to Settings → Vercel."
@@ -214,8 +215,8 @@ async def trigger_deployment(req: DeployRequest):
 async def refresh_deployments():
     """Refresh deployment statuses from Vercel."""
     settings = store.get_settings()
-    vercel_token = settings.get("vercel_token", "")
-    team_id = settings.get("vercel_team_id", "")
+    vercel_token = settings.get("vercel_token", "") or os.environ.get("VERCEL_TOKEN", "")
+    team_id = settings.get("vercel_team_id", "") or os.environ.get("VERCEL_TEAM_ID", "")
 
     if not vercel_token:
         return {"ok": False, "error": "Vercel token not configured"}
@@ -386,8 +387,8 @@ async def redeploy(deploy_id: str):
         raise HTTPException(status_code=400, detail="Redeploy only supported for Vercel")
 
     settings = store.get_settings()
-    vercel_token = settings.get("vercel_token", "")
-    team_id = settings.get("vercel_team_id", "")
+    vercel_token = settings.get("vercel_token", "") or os.environ.get("VERCEL_TOKEN", "")
+    team_id = settings.get("vercel_team_id", "") or os.environ.get("VERCEL_TEAM_ID", "")
 
     if not vercel_token:
         raise HTTPException(status_code=400, detail="Vercel token not configured")
@@ -517,14 +518,14 @@ class VercelTestRequest(BaseModel):
 @router.post("/vercel/test")
 async def test_vercel_connection(req: VercelTestRequest = None):
     """Test Vercel API connection."""
-    # Use token from request body (form input) or fall back to saved settings
+    # Use token from request body (form input) or fall back to saved settings, then env vars
     if req and req.token:
         vercel_token = req.token
         team_id = req.team_id or ""
     else:
         settings = store.get_settings()
-        vercel_token = settings.get("vercel_token", "")
-        team_id = settings.get("vercel_team_id", "")
+        vercel_token = settings.get("vercel_token", "") or os.environ.get("VERCEL_TOKEN", "")
+        team_id = settings.get("vercel_team_id", "") or os.environ.get("VERCEL_TEAM_ID", "")
 
     if not vercel_token:
         return {"ok": False, "error": "Vercel token not configured"}
@@ -537,7 +538,7 @@ async def test_vercel_connection(req: VercelTestRequest = None):
 async def vercel_projects():
     """List Vercel projects."""
     settings = store.get_settings()
-    vercel_token = settings.get("vercel_token", "")
+    vercel_token = settings.get("vercel_token", "") or os.environ.get("VERCEL_TOKEN", "")
     if not vercel_token:
         return {"ok": False, "error": "Vercel token not configured"}
     client = VercelClient(token=vercel_token)
