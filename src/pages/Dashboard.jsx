@@ -51,17 +51,12 @@ function AppTile({ app, timeAgo, onDelete, deployStatus }) {
           {deployStatus && (
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-gray-500">Deploy:</span>
-              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                deployStatus === 'ready' ? 'bg-green-100 text-green-700' :
-                deployStatus === 'building' ? 'bg-blue-100 text-blue-700' :
-                deployStatus === 'error' ? 'bg-red-100 text-red-700' :
-                'bg-gray-100 text-gray-600'
-              }`}>
-                {deployStatus === 'ready' ? '✅ Deployed' :
-                 deployStatus === 'building' ? '🔨 Building' :
-                 deployStatus === 'error' ? '❌ Failed' :
-                 `⏳ ${deployStatus}`}
-              </span>
+              <span className={`w-2.5 h-2.5 rounded-full ${
+                deployStatus === 'ready' ? 'bg-green-500' :
+                deployStatus === 'building' ? 'bg-blue-500 animate-pulse' :
+                deployStatus === 'error' ? 'bg-red-500' :
+                'bg-gray-400'
+              }`} title={deployStatus === 'ready' ? 'Deployed' : deployStatus} />
             </div>
           )}
         </div>
