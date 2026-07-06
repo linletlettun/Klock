@@ -23,11 +23,9 @@ export function ConfigDeploy() {
         const seen = new Set();
         const apps = deps
           .filter((d) => {
-            // Only show apps deployed from this portal (not git-push auto deploy)
-            if (d.trigger === 'git-push') return false;
             // Only show ready/promoted deployments
             if (d.status !== 'ready' && d.status !== 'promoted') return false;
-            // Deduplicate by app name
+            // Deduplicate by app name (keep latest)
             if (seen.has(d.app_name)) return false;
             seen.add(d.app_name);
             return true;

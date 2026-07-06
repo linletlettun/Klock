@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApplications } from '@/hooks/useApplications';
 import { useClusters } from '@/hooks/useClusters';
 import StatusBadge from '@/components/ui/StatusBadge';
 import NewAppModal from '@/components/apps/NewAppModal';
+import api from '@/services/api';
 
-function AppTile({ app, timeAgo, onDelete }) {
+function AppTile({ app, timeAgo, onDelete, deployStatus }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow group relative">
       <a
@@ -47,6 +48,22 @@ function AppTile({ app, timeAgo, onDelete }) {
             <span className="text-xs text-gray-500">Health:</span>
             <StatusBadge status={app.health} />
           </div>
+          {deployStatus && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-gray-500">Deploy:</span>
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                deployStatus === 'ready' ? 'bg-green-100 text-green-700' :
+                deployStatus === 'building' ? 'bg-blue-100 text-blue-700' :
+                deployStatus === 'error' ? 'bg-red-100 text-red-700' :
+                'bg-gray-100 text-gray-600'
+              }`}>
+                {deployStatus === 'ready' ? '✅ Deployed' :
+                 deployStatus === 'building' ? '🔨 Building' :
+                 deployStatus === 'error' ? '❌ Failed' :
+                 `⏳ ${deployStatus}`}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Details */}
@@ -110,6 +127,22 @@ export default function Dashboard() {
   const [search, setSearch] = useState('');
   const [showNewApp, setShowNewApp] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [deployments, setDeployments] = useState({});
+
+  // Fetch Vercel deployment status for apps
+  useEffect(() => {
+    api.listDeployments()
+      .then((deps) => {
+        const statusMap = {};
+        deps.forEach((d) => {
+          if (d.status === 'ready' || d.status === 'promoted' || d.status === 'building' || d.status === 'error') {
+            statusMap[d.app_name] = d.status;
+          }
+        });
+        setDeployments(statusMap);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleDeleteApp = (app) => {
     if (!confirm(`Delete "${app.name}" from the catalog?`)) return;
@@ -245,7 +278,7 @@ export default function Dashboard() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((app) => (
-            <AppTile key={app.id} app={app} timeAgo={timeAgo} onDelete={handleDeleteApp} />
+            <AppTile key={app.id} app={app} timeAgo={timeAgo} onDelete={handleDeleteApp} deployStatus={deployments[app.name]} />
           ))}
         </div>
       )}
