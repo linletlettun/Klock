@@ -207,7 +207,15 @@ export default function Deployments() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-semibold text-gray-900">{d.app_name}</span>
+                          {d.url ? (
+                            <a href={d.url.startsWith('http') ? d.url : `https://${d.url}`}
+                              target="_blank" rel="noopener noreferrer"
+                              className="text-sm font-semibold text-gray-900 hover:text-blue-600 hover:underline">
+                              {d.app_name} ▲
+                            </a>
+                          ) : (
+                            <span className="text-sm font-semibold text-gray-900">{d.app_name}</span>
+                          )}
                           <span className="rounded-full px-2 py-0.5 text-xs font-medium text-gray-600 bg-gray-100">
                             {platform?.name || d.platform}
                           </span>
@@ -221,15 +229,15 @@ export default function Deployments() {
                           {d.url && (
                             <a href={d.url.startsWith('http') ? d.url : `https://${d.url}`}
                               target="_blank" rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline truncate max-w-[200px]">
-                              {d.url}
+                              className="text-blue-600 hover:underline truncate max-w-[250px]">
+                              🔗 {d.url}
                             </a>
                           )}
-                          {d.platform === 'vercel' && (
-                            <a href={d.dashboard_url || `https://vercel.com/klockdevops/${d.app_name}/deployments/${d.id}`}
+                          {d.platform === 'vercel' && d.dashboard_url && (
+                            <a href={d.dashboard_url}
                               target="_blank" rel="noopener noreferrer"
                               className="text-orange-600 hover:underline font-medium">
-                              📋 View Build Logs
+                              📋 Build Logs
                             </a>
                           )}
                         </div>
