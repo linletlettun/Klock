@@ -21,6 +21,13 @@
         "ARGOCD_NAMESPACE": "argocd",
         "ARGOCD_INSECURE": "false"
       }
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ]
     }
   }
 }

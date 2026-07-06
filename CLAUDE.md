@@ -15,6 +15,7 @@
 | supabase | @supabase/mcp-server-supabase | Database operations |
 | argocd | argocd-mcp | ArgoCD app management, sync, rollback |
 | grafana | (external) | Monitoring dashboards |
+| puppeteer | @modelcontextprotocol/server-puppeteer | Browser screenshots & automation |
 
 ### ArgoCD MCP Configuration
 Update `.mcp.json` with your ArgoCD credentials:
