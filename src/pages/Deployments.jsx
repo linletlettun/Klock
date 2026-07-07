@@ -255,6 +255,8 @@ export default function Deployments() {
                       {(d.status === 'ready' || d.status === 'promoted') && d.platform === 'vercel' && (
                         <span className="rounded px-2 py-1 text-xs font-medium text-green-700 bg-green-100">✅ Deployed</span>
                       )}
+                      <button onClick={() => handleDelete(d.id)}
+                        className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50">🗑️</button>
                     </div>
                   </div>
                   {d.error && (
