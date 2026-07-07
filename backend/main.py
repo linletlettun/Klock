@@ -70,3 +70,4 @@ async def debug_info():
         "env_supabase_url": bool(os.environ.get("SUPABASE_URL")),
         "env_supabase_key": bool(os.environ.get("SUPABASE_KEY")),
     }
+# Tue Jul  7 16:28:34 +0630 2026
