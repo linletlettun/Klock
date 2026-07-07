@@ -253,8 +253,7 @@ export default function Deployments() {
                           className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50">🔄 Redeploy</button>
                       )}
                       {(d.status === 'ready' || d.status === 'promoted') && d.platform === 'vercel' && (
-                        <button onClick={() => handlePromote(d.id)}
-                          className="rounded px-2 py-1 text-xs font-medium text-purple-600 hover:bg-purple-50">⭐ Promote</button>
+                        <span className="rounded px-2 py-1 text-xs font-medium text-green-700 bg-green-100">✅ Deployed</span>
                       )}
                     </div>
                   </div>
