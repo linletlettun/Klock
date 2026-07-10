@@ -1,21 +1,18 @@
 # User Feedback — Klock Portal
 
-- **How collected:** [form / chat / message — and how many people]
-- **When:** [date]
+- **How collected:** chat message
+- **When:** 2026-07-11
 
 ## Raw feedback
 
-1. [Feedback item 1]
-2. [Feedback item 2]
-3. [Feedback item 3]
+1. Need an alerting system that sends notifications to email or chat when cluster events occur (e.g. deployment failures, pod crashes, resource thresholds)
 
 ## Themes (what keeps coming up)
 
-- [Theme 1]
-- [Theme 2]
+- Alerting / notification system for cluster monitoring
 
 ## Top 3 things to fix
 
-- [ ] [Fix 1]
-- [ ] [Fix 2]
-- [ ] [Fix 3]
+- [ ] Add alerting system with email/chat notifications
+- [ ] [TODO: add more items]
+- [ ] [TODO: add more items]
